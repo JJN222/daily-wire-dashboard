@@ -316,7 +316,7 @@ st.markdown("""
             DAILY WIRE COMPETITOR ANALYTICS DASHBOARD
         </div>
         <div style="font-size: 20px; font-weight: 300; color: #221F1F; margin-top: 15px;">
-            Real-time YouTube Performance Tracking & AI-Powered Insights
+            Real-time YouTube Performance Tracking & Strategic Insights
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -513,8 +513,10 @@ if youtube_api_key and selected_channels:
             df['published_at'] = pd.to_datetime(df['published_at'])
             
             # Overview metrics
+            st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)  # ADD THIS LINE for spacing
+
             col1, col2, col3, col4 = st.columns(4)
-            
+
             with col1:
                 st.markdown("""
                     <div class="metric-card">
@@ -527,7 +529,7 @@ if youtube_api_key and selected_channels:
                     len(df[df['is_short']]),
                     len(df[~df['is_short']])
                 ), unsafe_allow_html=True)
-            
+
             with col2:
                 total_views = df['views'].sum()
                 st.markdown("""
@@ -540,7 +542,7 @@ if youtube_api_key and selected_channels:
                     f"{total_views/1_000_000:.1f}M" if total_views >= 1_000_000 else f"{total_views/1_000:.0f}K",
                     df['views'].mean()
                 ), unsafe_allow_html=True)
-            
+
             with col3:
                 total_engagement = df['likes'].sum() + df['comments'].sum()
                 st.markdown("""
@@ -553,21 +555,21 @@ if youtube_api_key and selected_channels:
                     f"{total_engagement/1_000:.0f}K",
                     (total_engagement / total_views * 100) if total_views > 0 else 0
                 ), unsafe_allow_html=True)
-            
+
             with col4:
                 top_channel = df.groupby('channel')['views'].sum().idxmax()
                 top_channel_views = df.groupby('channel')['views'].sum().max()
                 st.markdown("""
                     <div class="metric-card">
                         <h3>Top Channel</h3>
-                        <div class="value" style="font-size: 20px;">{}</div>
+                        <div class="value">{}</div>
                         <div class="change positive">{} views</div>
                     </div>
                 """.format(
-                    top_channel,
+                    top_channel,  # REMOVED the font-size style
                     f"{top_channel_views/1_000_000:.1f}M" if top_channel_views >= 1_000_000 else f"{top_channel_views/1_000:.0f}K"
                 ), unsafe_allow_html=True)
-            
+
             st.markdown("---")
             
             # Tabs for different analyses
