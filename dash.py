@@ -877,6 +877,68 @@ if youtube_api_key and selected_channels:
                             margin=dict(t=50, b=40)  # ADD this for extra top margin
                         )
                         st.plotly_chart(fig_regular_uploads, use_container_width=True)
+
+                        # Chart 4: Total Engagement - Regular Videos
+                        regular_by_channel['total_engagement'] = regular_df.groupby('channel').apply(
+                            lambda x: x['likes'].sum() + x['comments'].sum()
+                        ).values
+
+                        fig_regular_engagement = go.Figure()
+                        fig_regular_engagement.add_trace(go.Bar(
+                            x=regular_by_channel.index,
+                            y=regular_by_channel['total_engagement'],
+                            marker_color='#E6DDC1',
+                            text=[f"{v/1_000_000:.1f}M" if v >= 1_000_000 else f"{v/1000:.0f}K" if v >= 1000 else f"{int(v)}" for v in regular_by_channel['total_engagement']],
+                            textposition='outside',
+                            hovertemplate='%{x}<br>Total Engagement: %{y:,.0f}<extra></extra>'
+                        ))
+
+                        fig_regular_engagement.update_layout(
+                            title="Total Engagement - Regular Videos",
+                            xaxis_title="",
+                            yaxis_title="Total Engagement",  # CHANGED - removed (Likes + Comments)
+                            font=dict(family="Inter"),
+                            height=350,
+                            xaxis_tickangle=-45,
+                            yaxis=dict(
+                                gridcolor='rgba(0,0,0,0.1)',
+                                range=[0, regular_by_channel['total_engagement'].max() * 1.2]
+                            ),
+                            plot_bgcolor='white',
+                            margin=dict(t=50, b=40)
+                        )
+                        st.plotly_chart(fig_regular_engagement, use_container_width=True)
+
+                        # Chart 5: Average Engagement per Video
+                        regular_by_channel['avg_engagement'] = regular_by_channel['total_engagement'] / regular_by_channel['video_count']
+
+                        fig_regular_avg_engagement = go.Figure()
+                        fig_regular_avg_engagement.add_trace(go.Bar(
+                            x=regular_by_channel.index,
+                            y=regular_by_channel['avg_engagement'],
+                            marker_color='#E6DDC1',
+                            text=[f"{v/1000:.1f}K" if v >= 1000 else f"{v:.0f}" for v in regular_by_channel['avg_engagement']],  # CHANGED - added K abbreviation
+                            textposition='outside',
+                            hovertemplate='%{x}<br>Avg Engagement: %{y:,.0f}<extra></extra>'
+                        ))
+
+                        fig_regular_avg_engagement.update_layout(
+                            title="Average Engagement per Regular Video",
+                            xaxis_title="",
+                            yaxis_title="Average Engagement",  # CHANGED - removed (Likes + Comments)
+                            font=dict(family="Inter"),
+                            height=350,
+                            xaxis_tickangle=-45,
+                            yaxis=dict(
+                                gridcolor='rgba(0,0,0,0.1)',
+                                range=[0, regular_by_channel['avg_engagement'].max() * 1.2]
+                            ),
+                            plot_bgcolor='white',
+                            margin=dict(t=50, b=40)
+                        )
+                        st.plotly_chart(fig_regular_avg_engagement, use_container_width=True)
+
+                        
                     else:
                         st.info("No regular videos found in selected time range")
                 
@@ -979,6 +1041,66 @@ if youtube_api_key and selected_channels:
                             margin=dict(t=50, b=40)  # ADD this for extra top margin
                         )
                         st.plotly_chart(fig_shorts_uploads, use_container_width=True)
+
+                        # Chart 4: Total Engagement - Shorts
+                        shorts_by_channel['total_engagement'] = shorts_df.groupby('channel').apply(
+                            lambda x: x['likes'].sum() + x['comments'].sum()
+                        ).values
+
+                        fig_shorts_engagement = go.Figure()
+                        fig_shorts_engagement.add_trace(go.Bar(
+                            x=shorts_by_channel.index,
+                            y=shorts_by_channel['total_engagement'],
+                            marker_color='#BCE5F7',
+                            text=[f"{v/1_000_000:.1f}M" if v >= 1_000_000 else f"{v/1000:.0f}K" if v >= 1000 else f"{int(v)}" for v in shorts_by_channel['total_engagement']],
+                            textposition='outside',
+                            hovertemplate='%{x}<br>Total Engagement: %{y:,.0f}<extra></extra>'
+                        ))
+
+                        fig_shorts_engagement.update_layout(
+                            title="Total Engagement - Shorts",
+                            xaxis_title="",
+                            yaxis_title="Total Engagement",  # CHANGED - removed (Likes + Comments)
+                            font=dict(family="Inter"),
+                            height=350,
+                            xaxis_tickangle=-45,
+                            yaxis=dict(
+                                gridcolor='rgba(0,0,0,0.1)',
+                                range=[0, shorts_by_channel['total_engagement'].max() * 1.2]
+                            ),
+                            plot_bgcolor='white',
+                            margin=dict(t=50, b=40)
+                        )
+                        st.plotly_chart(fig_shorts_engagement, use_container_width=True)
+
+                        # Chart 5: Average Engagement per Short
+                        shorts_by_channel['avg_engagement'] = shorts_by_channel['total_engagement'] / shorts_by_channel['video_count']
+
+                        fig_shorts_avg_engagement = go.Figure()
+                        fig_shorts_avg_engagement.add_trace(go.Bar(
+                            x=shorts_by_channel.index,
+                            y=shorts_by_channel['avg_engagement'],
+                            marker_color='#BCE5F7',
+                            text=[f"{v/1000:.1f}K" if v >= 1000 else f"{v:.0f}" for v in shorts_by_channel['avg_engagement']],  # CHANGED - added K abbreviation
+                            textposition='outside',
+                            hovertemplate='%{x}<br>Avg Engagement: %{y:,.0f}<extra></extra>'
+                        ))
+
+                        fig_shorts_avg_engagement.update_layout(
+                            title="Average Engagement per Short",
+                            xaxis_title="",
+                            yaxis_title="Average Engagement",  # CHANGED - removed (Likes + Comments)
+                            font=dict(family="Inter"),
+                            height=350,
+                            xaxis_tickangle=-45,
+                            yaxis=dict(
+                                gridcolor='rgba(0,0,0,0.1)',
+                                range=[0, shorts_by_channel['avg_engagement'].max() * 1.2]
+                            ),
+                            plot_bgcolor='white',
+                            margin=dict(t=50, b=40)
+                        )
+                        st.plotly_chart(fig_shorts_avg_engagement, use_container_width=True)
                     else:
                         st.info("No Shorts found in selected time range")
             
