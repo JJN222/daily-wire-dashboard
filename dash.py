@@ -879,9 +879,12 @@ if youtube_api_key and selected_channels:
                         st.plotly_chart(fig_regular_uploads, use_container_width=True)
 
                         # Chart 4: Total Engagement - Regular Videos
-                        regular_by_channel['total_engagement'] = regular_df.groupby('channel').apply(
-                            lambda x: x['likes'].sum() + x['comments'].sum()
-                        ).values
+                        # FIX: Calculate engagement properly for each channel
+                        engagement_by_channel = regular_df.groupby('channel').apply(
+                            lambda x: (x['likes'].sum() + x['comments'].sum())
+                        ).to_dict()
+
+                        regular_by_channel['total_engagement'] = regular_by_channel.index.map(engagement_by_channel).fillna(0)
 
                         fig_regular_engagement = go.Figure()
                         fig_regular_engagement.add_trace(go.Bar(
@@ -910,7 +913,7 @@ if youtube_api_key and selected_channels:
                         st.plotly_chart(fig_regular_engagement, use_container_width=True)
 
                         # Chart 5: Average Engagement per Video
-                        regular_by_channel['avg_engagement'] = regular_by_channel['total_engagement'] / regular_by_channel['video_count']
+                        regular_by_channel['avg_engagement'] = regular_by_channel['total_engagement'].div(regular_by_channel['video_count']).fillna(0)
 
                         fig_regular_avg_engagement = go.Figure()
                         fig_regular_avg_engagement.add_trace(go.Bar(
@@ -1042,10 +1045,13 @@ if youtube_api_key and selected_channels:
                         )
                         st.plotly_chart(fig_shorts_uploads, use_container_width=True)
 
-                        # Chart 4: Total Engagement - Shorts
-                        shorts_by_channel['total_engagement'] = shorts_df.groupby('channel').apply(
-                            lambda x: x['likes'].sum() + x['comments'].sum()
-                        ).values
+                        # Chart 4: Total Engagement - Shorts  
+                        # FIX: Calculate engagement properly for each channel
+                        engagement_by_channel = shorts_df.groupby('channel').apply(
+                            lambda x: (x['likes'].sum() + x['comments'].sum())
+                        ).to_dict()
+
+                        shorts_by_channel['total_engagement'] = shorts_by_channel.index.map(engagement_by_channel).fillna(0)
 
                         fig_shorts_engagement = go.Figure()
                         fig_shorts_engagement.add_trace(go.Bar(
@@ -1075,6 +1081,7 @@ if youtube_api_key and selected_channels:
 
                         # Chart 5: Average Engagement per Short
                         shorts_by_channel['avg_engagement'] = shorts_by_channel['total_engagement'] / shorts_by_channel['video_count']
+
 
                         fig_shorts_avg_engagement = go.Figure()
                         fig_shorts_avg_engagement.add_trace(go.Bar(
