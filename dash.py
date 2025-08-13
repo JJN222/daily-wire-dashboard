@@ -525,16 +525,16 @@ if youtube_api_key and selected_channels:
             df['published_at'] = pd.to_datetime(df['published_at'])
             
             # Overview metrics
-            st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)  # ADD THIS LINE for spacing
+            st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
                 st.markdown("""
-                    <div class="metric-card">
+                    <div class="metric-card" style="min-height: 150px;">
                         <h3>Total Videos</h3>
                         <div class="value">{:,}</div>
-                        <div class="change positive">↑ {} Shorts, {} Regular</div>
+                        <div class="change positive">{} Shorts, {} Regular</div>
                     </div>
                 """.format(
                     len(df),
@@ -545,26 +545,26 @@ if youtube_api_key and selected_channels:
             with col2:
                 total_views = df['views'].sum()
                 st.markdown("""
-                    <div class="metric-card">
+                    <div class="metric-card" style="min-height: 150px;">
                         <h3>Total Views</h3>
                         <div class="value">{}</div>
-                        <div class="change positive">Avg: {:,.0f}/video</div>
+                        <div class="change positive">Avg: {}/video</div>
                     </div>
                 """.format(
                     f"{total_views/1_000_000:.1f}M" if total_views >= 1_000_000 else f"{total_views/1_000:.0f}K",
-                    df['views'].mean()
+                    f"{df['views'].mean()/1_000_000:.1f}M" if df['views'].mean() >= 1_000_000 else f"{df['views'].mean()/1_000:.0f}K" if df['views'].mean() >= 1_000 else f"{df['views'].mean():.0f}"
                 ), unsafe_allow_html=True)
 
             with col3:
                 total_engagement = df['likes'].sum() + df['comments'].sum()
                 st.markdown("""
-                    <div class="metric-card">
+                    <div class="metric-card" style="min-height: 150px;">
                         <h3>Total Engagement</h3>
                         <div class="value">{}</div>
                         <div class="change positive">{:.1f}% rate</div>
                     </div>
                 """.format(
-                    f"{total_engagement/1_000:.0f}K",
+                    f"{total_engagement/1_000_000:.1f}M" if total_engagement >= 1_000_000 else f"{total_engagement/1_000:.0f}K" if total_engagement >= 1_000 else f"{total_engagement:.0f}",
                     (total_engagement / total_views * 100) if total_views > 0 else 0
                 ), unsafe_allow_html=True)
 
@@ -572,13 +572,13 @@ if youtube_api_key and selected_channels:
                 top_channel = df.groupby('channel')['views'].sum().idxmax()
                 top_channel_views = df.groupby('channel')['views'].sum().max()
                 st.markdown("""
-                    <div class="metric-card">
+                    <div class="metric-card" style="min-height: 150px;">
                         <h3>Top Channel</h3>
-                        <div class="value">{}</div>
+                        <div class="value" style="font-size: 28px; line-height: 1.2;">{}</div>
                         <div class="change positive">{} views</div>
                     </div>
                 """.format(
-                    top_channel,  # REMOVED the font-size style
+                    top_channel,
                     f"{top_channel_views/1_000_000:.1f}M" if top_channel_views >= 1_000_000 else f"{top_channel_views/1_000:.0f}K"
                 ), unsafe_allow_html=True)
 
