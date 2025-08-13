@@ -1205,7 +1205,7 @@ if youtube_api_key and selected_channels:
                         
                         st.markdown(f"""
                             <div class="ai-analysis">
-                                <h4>Strategic Analysis for {start_date_input.strftime('%b %d')} - {end_date_input.strftime('%b %d, %Y')}</h4>
+                                <h4>Strategic Analysis for {time_range}</h4>
                                 {insights.replace(chr(10), '<br>')}
                             </div>
                         """, unsafe_allow_html=True)
