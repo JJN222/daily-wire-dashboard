@@ -212,7 +212,7 @@ if 'ai_analysis' not in st.session_state:
     st.session_state.ai_analysis = {}
 
 # Add caching for YouTube data
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=21600)  # Cache for 1 hour
 def fetch_all_channels_data(channel_list, start_date, api_key):
     """Fetch data for all channels with caching"""
     all_videos = []
@@ -337,69 +337,66 @@ def get_time_range_dates(time_range: str) -> Tuple[datetime, datetime]:
     
     return start_date, end_date
 
-def fetch_channel_videos(youtube, channel_id: str, start_date: datetime, max_results: int = 50) -> List[Dict]:
-    """Fetch videos from a channel within date range"""
+def fetch_channel_videos(youtube, channel_id: str, start_date: datetime, max_results: int = 100) -> List[Dict]:
+    """Fetch ALL videos from a channel within date range using pagination"""
     global DEFAULT_YOUTUBE_KEYS
     
+    all_videos = []
+    next_page_token = None
+    
     try:
-        request = youtube.search().list(
-            part="id,snippet",
-            channelId=channel_id,
-            maxResults=max_results,
-            order="date",
-            type="video",
-            publishedAfter=start_date.isoformat() + "Z"
-        )
-        response = request.execute()
-        
-        video_ids = [item['id']['videoId'] for item in response['items']]
-        
-        if not video_ids:
-            return []
-        
-        # Get video details including duration and statistics
-        videos_request = youtube.videos().list(
-            part="snippet,statistics,contentDetails",
-            id=",".join(video_ids)
-        )
-        videos_response = videos_request.execute()
-        
-        videos = []
-        for video in videos_response['items']:
-            duration = isodate.parse_duration(video['contentDetails']['duration'])
-            duration_seconds = duration.total_seconds()
+        while True:
+            request = youtube.search().list(
+                part="id,snippet",
+                channelId=channel_id,
+                maxResults=50,  # API allows up to 50 per page
+                order="date",
+                type="video",
+                publishedAfter=start_date.isoformat() + "Z",
+                pageToken=next_page_token  # Add pagination
+            )
+            response = request.execute()
             
-            videos.append({
-                'id': video['id'],
-                'title': video['snippet']['title'],
-                'published_at': video['snippet']['publishedAt'],
-                'duration_seconds': duration_seconds,
-                'is_short': duration_seconds <= 181,
-                'views': int(video['statistics'].get('viewCount', 0)),
-                'likes': int(video['statistics'].get('likeCount', 0)),
-                'comments': int(video['statistics'].get('commentCount', 0)),
-                'thumbnail': video['snippet']['thumbnails']['medium']['url']
-            })
-        
-        return videos
+            video_ids = [item['id']['videoId'] for item in response.get('items', [])]
+            
+            if video_ids:
+                # Get video details including duration and statistics
+                videos_request = youtube.videos().list(
+                    part="snippet,statistics,contentDetails",
+                    id=",".join(video_ids)
+                )
+                videos_response = videos_request.execute()
+                
+                for video in videos_response.get('items', []):
+                    duration = isodate.parse_duration(video['contentDetails']['duration'])
+                    duration_seconds = duration.total_seconds()
+                    
+                    all_videos.append({
+                        'id': video['id'],
+                        'title': video['snippet']['title'],
+                        'published_at': video['snippet']['publishedAt'],
+                        'duration_seconds': duration_seconds,
+                        'is_short': duration_seconds <= 181,
+                        'views': int(video['statistics'].get('viewCount', 0)),
+                        'likes': int(video['statistics'].get('likeCount', 0)),
+                        'comments': int(video['statistics'].get('commentCount', 0)),
+                        'thumbnail': video['snippet']['thumbnails']['medium']['url']
+                    })
+            
+            # Check if there are more pages
+            next_page_token = response.get('nextPageToken')
+            if not next_page_token:
+                break
+                
+        return all_videos
         
     except HttpError as e:
         if 'quotaExceeded' in str(e) and DEFAULT_YOUTUBE_KEYS and len(DEFAULT_YOUTUBE_KEYS) > 1:
-            # Try next key
             st.session_state.current_key_index = (st.session_state.current_key_index + 1) % len(DEFAULT_YOUTUBE_KEYS)
-            # COMMENT OUT OR REMOVE THIS LINE:
-            # st.warning(f"Quota exceeded, switching to backup API key {st.session_state.current_key_index + 1}")
-            
-            # Rebuild YouTube client with new key
             youtube = build('youtube', 'v3', developerKey=DEFAULT_YOUTUBE_KEYS[st.session_state.current_key_index])
-            
-            # Retry with new key
             return fetch_channel_videos(youtube, channel_id, start_date, max_results)
         else:
-            # COMMENT OUT OR REMOVE THIS LINE TOO:
-            # st.error(f"YouTube API Error: {e}")
             return []
-
         
 def generate_ai_insights(data: pd.DataFrame, openai_client) -> str:
     """Generate Strategic Insights from the data"""
