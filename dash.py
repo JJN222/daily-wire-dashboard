@@ -283,12 +283,57 @@ with st.sidebar:
     youtube_api_key = DEFAULT_YOUTUBE_KEYS[st.session_state.current_key_index] if DEFAULT_YOUTUBE_KEYS else ''
     openai_api_key = DEFAULT_OPENAI_KEY
     
-    st.markdown('<h3 style="font-family: Inter; font-weight: 700;">Time Range</h3>', unsafe_allow_html=True)
-    time_range = st.selectbox(
-        "Select Analysis Period",
-        ["Last 24 Hours", "Last 7 Days", "Last 30 Days", "Last 90 Days"],
-        index=1
-    )
+    st.markdown('<h3 style="font-family: Inter; font-weight: 700;">Date Range</h3>', unsafe_allow_html=True)
+    
+    # Date range selector with limits
+    max_date = datetime.now().date()
+    min_date = max_date - timedelta(days=90)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date_input = st.date_input(
+            "Start Date",
+            value=max_date - timedelta(days=7),  # Default to 7 days ago
+            min_value=min_date,
+            max_value=max_date,
+            key="start_date"
+        )
+    
+    with col2:
+        end_date_input = st.date_input(
+            "End Date",
+            value=max_date,  # Default to today
+            min_value=min_date,
+            max_value=max_date,
+            key="end_date"
+        )
+    
+    # Validate date range
+    if start_date_input > end_date_input:
+        st.error("Start date must be before end date")
+        start_date_input, end_date_input = end_date_input, start_date_input
+    
+    # Quick select buttons for common ranges
+    st.markdown("**Quick Select:**")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Last 7 Days", use_container_width=True):
+            st.session_state.start_date = max_date - timedelta(days=7)
+            st.session_state.end_date = max_date
+            st.rerun()
+        if st.button("Last 30 Days", use_container_width=True):
+            st.session_state.start_date = max_date - timedelta(days=30)
+            st.session_state.end_date = max_date
+            st.rerun()
+    with col2:
+        if st.button("Last 14 Days", use_container_width=True):
+            st.session_state.start_date = max_date - timedelta(days=14)
+            st.session_state.end_date = max_date
+            st.rerun()
+        if st.button("Last 90 Days", use_container_width=True):
+            st.session_state.start_date = max_date - timedelta(days=90)
+            st.session_state.end_date = max_date
+            st.rerun()
     
     st.markdown("---")
     
@@ -301,8 +346,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # REMOVE THE CACHED FUNCTION CALL FROM HERE
-    if st.button("🔄 Refresh Data", use_container_width=True):
+    if st.button("Refresh Data", use_container_width=True):
         st.cache_data.clear()  # Clear cache to force refresh
         st.rerun()
 
@@ -322,19 +366,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Helper functions
-def get_time_range_dates(time_range: str) -> Tuple[datetime, datetime]:
-    """Convert time range string to datetime objects"""
-    end_date = datetime.now()
-    
-    if time_range == "Last 24 Hours":
-        start_date = end_date - timedelta(days=1)
-    elif time_range == "Last 7 Days":
-        start_date = end_date - timedelta(days=7)
-    elif time_range == "Last 30 Days":
-        start_date = end_date - timedelta(days=30)
-    else:  # Last 90 Days
-        start_date = end_date - timedelta(days=90)
-    
+def get_time_range_dates(start_date_input, end_date_input) -> Tuple[datetime, datetime]:
+    """Convert date inputs to datetime objects"""
+    # Convert date to datetime (start of day for start_date, end of day for end_date)
+    start_date = datetime.combine(start_date_input, datetime.min.time())
+    end_date = datetime.combine(end_date_input, datetime.max.time())
     return start_date, end_date
 
 def fetch_channel_videos(youtube, channel_id: str, start_date: datetime, max_results: int = 100) -> List[Dict]:
@@ -467,7 +503,7 @@ if youtube_api_key and selected_channels:
             openai_client = OpenAI(api_key=openai_api_key)
         
         # Get date range - THIS MUST COME FIRST
-        start_date, end_date = get_time_range_dates(time_range)
+        start_date, end_date = get_time_range_dates(start_date_input, end_date_input)
         
         # Option 1: Use cached function
         all_videos = fetch_all_channels_data(selected_channels, start_date, youtube_api_key)
@@ -1190,7 +1226,7 @@ if youtube_api_key and selected_channels:
                         
                         st.markdown(f"""
                             <div class="ai-analysis">
-                                <h4>Strategic Analysis for {time_range}</h4>
+                                <h4>Strategic Analysis for {start_date_input.strftime('%b %d')} - {end_date_input.strftime('%b %d, %Y')}</h4>
                                 {insights.replace(chr(10), '<br>')}
                             </div>
                         """, unsafe_allow_html=True)
