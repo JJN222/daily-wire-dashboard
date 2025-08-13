@@ -482,7 +482,7 @@ if youtube_api_key and selected_channels:
             openai_client = OpenAI(api_key=openai_api_key)
         
         # Get date range - THIS MUST COME FIRST
-        start_date, end_date = get_time_range_dates(start_date_input, end_date_input)
+        start_date, end_date = get_time_range_dates(time_range)
         
         # Option 1: Use cached function
         all_videos = fetch_all_channels_data(selected_channels, start_date, youtube_api_key)
