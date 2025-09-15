@@ -274,29 +274,43 @@ DEFAULT_SPORTS_CHANNELS = [
     'Adapt & Respond with RJ Young'
 ]
 
-
 # Add caching for YouTube data
 @st.cache_data(ttl=21600)  # Cache for 6 hours
 def fetch_all_channels_data(channel_list, start_date, api_key, channels_dict):
     """Fetch data for all channels with caching"""
     all_videos = []
     youtube = build('youtube', 'v3', developerKey=api_key)
+    failed_channels = []
     
     for channel_name in channel_list:
         channel_id = channels_dict[channel_name]
         try:
             videos = fetch_channel_videos(youtube, channel_id, start_date)
-            for video in videos:
-                video['channel'] = channel_name
-                all_videos.append(video)
-        except HttpError as e:
-            if 'quotaExceeded' in str(e):
-                continue
+            if videos:
+                for video in videos:
+                    video['channel'] = channel_name
+                    all_videos.append(video)
+                st.success(f"✅ {channel_name}: {len(videos)} videos found")
             else:
-                continue
+                st.warning(f"⚠️ {channel_name}: No videos found in date range")
+        except HttpError as e:
+            error_reason = str(e)
+            if 'quotaExceeded' in error_reason:
+                st.error(f"❌ API Quota exceeded for {channel_name}")
+                failed_channels.append(f"{channel_name} (quota exceeded)")
+            elif 'channelNotFound' in error_reason or 'invalidChannelId' in error_reason:
+                st.error(f"❌ {channel_name}: Invalid channel ID - {channel_id}")
+                failed_channels.append(f"{channel_name} (invalid ID)")
+            else:
+                st.error(f"❌ {channel_name}: API Error - {error_reason}")
+                failed_channels.append(f"{channel_name} (API error)")
         except Exception as e:
-            continue
+            st.error(f"❌ {channel_name}: Unexpected error - {str(e)}")
+            failed_channels.append(f"{channel_name} (unexpected error)")
         time.sleep(0.5)  # Rate limiting
+    
+    if failed_channels:
+        st.warning(f"Failed to fetch data for: {', '.join(failed_channels)}")
     
     return all_videos
 
@@ -329,20 +343,18 @@ with st.sidebar:
     st.markdown('<h3 style="font-family: Inter; font-weight: 700;">Time Range</h3>', unsafe_allow_html=True)
     time_range = st.selectbox(
         "Select Analysis Period",
-        ["Last 7 Days", "Last 14 Days", "Last 30 Days", "Last 90 Days"],
-        index=0
+        ["Last 1 Day", "Last 3 Days", "Last 7 Days"],
+        index=2
     )
     
     # Calculate and display the actual date range (excluding today)
     end_date = datetime.now() - timedelta(days=1)  # Yesterday
-    if time_range == "Last 7 Days":
+    if time_range == "Last 1 Day":
+        start_date = end_date  # Just yesterday
+    elif time_range == "Last 3 Days":
+        start_date = end_date - timedelta(days=2)  # 3 days total
+    else:  # Last 7 Days
         start_date = end_date - timedelta(days=6)  # 7 days total
-    elif time_range == "Last 14 Days":
-        start_date = end_date - timedelta(days=13)  # 14 days total
-    elif time_range == "Last 30 Days":
-        start_date = end_date - timedelta(days=29)  # 30 days total
-    else:  # Last 90 Days
-        start_date = end_date - timedelta(days=89)  # 90 days total
     
     # Display the date range
     st.markdown(f"**Date Range:** {start_date.strftime('%m/%d/%y')} - {end_date.strftime('%m/%d/%y')}")
@@ -392,16 +404,14 @@ def get_time_range_dates(time_range: str) -> Tuple[datetime, datetime]:
     end_date = datetime.now() - timedelta(days=1)  # Yesterday at current time
     end_date = end_date.replace(hour=23, minute=59, second=59)  # End of yesterday
     
-    if time_range == "Last 7 Days":
+    if time_range == "Last 1 Day":
+        start_date = end_date.replace(hour=0, minute=0, second=0)  # Start of yesterday
+    elif time_range == "Last 3 Days":
+        start_date = end_date - timedelta(days=2)
+        start_date = start_date.replace(hour=0, minute=0, second=0)  # Start of day
+    else:  # Last 7 Days
         start_date = end_date - timedelta(days=6)
-    elif time_range == "Last 14 Days":
-        start_date = end_date - timedelta(days=13)
-    elif time_range == "Last 30 Days":
-        start_date = end_date - timedelta(days=29)
-    else:  # Last 90 Days
-        start_date = end_date - timedelta(days=89)
-    
-    start_date = start_date.replace(hour=0, minute=0, second=0)  # Start of day
+        start_date = start_date.replace(hour=0, minute=0, second=0)  # Start of day
     
     return start_date, end_date
 
@@ -544,8 +554,9 @@ if youtube_api_key and selected_channels:
         # Get date range
         start_date, end_date = get_time_range_dates(time_range)
         
-        # Use cached function
-        all_videos = fetch_all_channels_data(selected_channels, start_date, youtube_api_key, CHANNELS)
+        # Use cached function with diagnostic mode
+        with st.spinner("Fetching channel data..."):
+            all_videos = fetch_all_channels_data(selected_channels, start_date, youtube_api_key, CHANNELS)
 
         if len(all_videos) == 0:
             st.warning("No videos fetched. This could be due to:")
