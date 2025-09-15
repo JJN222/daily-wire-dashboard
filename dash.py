@@ -273,6 +273,7 @@ DEFAULT_SPORTS_CHANNELS = [
     'SEC Shorts'
 ]
 
+
 # Add caching for YouTube data
 @st.cache_data(ttl=21600)  # Cache for 6 hours
 def fetch_all_channels_data(channel_list, start_date, api_key, channels_dict):
