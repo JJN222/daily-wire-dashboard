@@ -243,20 +243,21 @@ POLITICAL_CHANNELS = {
 }
 
 SPORTS_CHANNELS = {
-    'Josh Pate\'s College Football Show': 'UCG-q_MDEWqrijzr1VPLEPYg',
+    'Josh Pate\'s College Football Show': 'UCg-q_MDeWQrjizr1VPLEpYg',
     'On3': 'UCn2g2Wy8uiE9BhDPV4knT7A',
-    'FortunateYouth': 'UCJn33SOv86632dLg_qWIcg',
-    'Adapt & Respond with RJ Young': 'UC2g1DShTjHNcjBQ-PC-4aHA',
-    'Cover 3 Podcast': 'UCODwphyohBn9u8-FWWfbQ7g',
-    'CFB ON FOX': 'UCpwix-O6ceqMgdxhqlynzFA',
-    'The Film Guy Network': 'UCqipe2jOlQZke4AN3-K9DJA',
+    'ESPN College Football': 'UCzRWWsFjqHk1an4OnVPsl9g',
+    'Adapt & Respond with RJ Young': 'UC2g1DShTjHNCjbQ-PC-4aHA',
+    'Cover 3 Podcast': 'UCODwphyohBn9u8-FVWfbQ7g',
+    'CFB ON FOX': 'UCpwix-O6ceqMgdxhqIynzFA',
+    'The Film Guy Network': 'UCqipe2JOIQZke4AN3-K9DJA',
     'Bleacher Report': 'UC9-OpMMVoNP5o10_Iyq7Ndw',
-    'SEC Shorts': 'UCUOzVgb9Q8AgZjJlYcLWztQ',
-    'Locked On College Football': 'UCqNQsWmyf0LCFUkr01QZ2LQ',
+    'SEC Shorts': 'UCUOZvgB9Q8AgZjjLYcLWztQ',
+    'Locked On College Football': 'UCqNQsWmyf0LCFUKr01QZ2LQ',
     'Strictly Football': 'UCGAOAB1tD432c5pyXMzS-6w',
     'College Football City': 'UCrjdiWSTYMLEHGYs5yfp56Q',
     'MattBeGreat': 'UCCQfkgVy-f814HGAwKQFPaw',
     'See Ball Get Ball with David Pollack': 'UC3-r8FzHqjr-O3KvPU26ZEA',
+    'The Herd with Colin Cowherd': 'UCFDidMd82mpDkKijLUqHp7A',
     'Crain & Company': 'UC-LeIYApj-NTHYGAzU4cPBQ'
 }
 
@@ -270,7 +271,7 @@ DEFAULT_POLITICAL_CHANNELS = [
 DEFAULT_SPORTS_CHANNELS = [
     'Crain & Company',
     'Josh Pate\'s College Football Show',
-    'SEC Shorts'
+    'Adapt & Respond with RJ Young'
 ]
 
 
